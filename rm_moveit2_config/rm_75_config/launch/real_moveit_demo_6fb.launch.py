@@ -12,6 +12,9 @@ from moveit_configs_utils.launch_utils import (
 )
 from launch.substitutions import LaunchConfiguration
 from launch_ros.parameter_descriptions import ParameterValue
+from ament_index_python.packages import get_package_share_directory
+import os
+import yaml
 
 
 def generate_launch_description():
@@ -19,6 +22,7 @@ def generate_launch_description():
     moveit_config = (
         MoveItConfigsBuilder("rm_75_description", package_name="rm_75_config")
         .robot_description(file_path="config/rm_75_6fb_description.urdf.xacro", mappings={"link7_type": "Link7_6fb"})
+        .planning_pipelines(pipelines=["ompl"])
         .to_moveit_configs()
     )
     
@@ -78,10 +82,17 @@ def my_generate_move_group_launch(ld, moveit_config):
         "trajectory_execution.allowed_start_tolerance": 0.15,
     }
 
+    # Load OMPL planning configuration
+    pkg_share = get_package_share_directory('rm_75_config')
+    ompl_config_path = os.path.join(pkg_share, 'config', 'ompl_planning.yaml')
+    with open(ompl_config_path, 'r') as file:
+        ompl_planning_config = yaml.safe_load(file)
+    
     move_group_params = [
         moveit_config.to_dict(),
         move_group_configuration,
         trajectory_execution,
+        ompl_planning_config,
     ]
 
     add_debuggable_node(

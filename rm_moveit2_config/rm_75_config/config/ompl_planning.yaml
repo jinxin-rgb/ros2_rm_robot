@@ -1,0 +1,107 @@
+# OMPL Planning Configuration for RM75 Robot
+# Optimized workspace bounds and planning parameters
+
+planning_plugin: ompl_interface/OMPLPlanner
+request_adapters: >-
+  default_planner_request_adapters/AddTimeOptimalParameterization
+  default_planner_request_adapters/ResolveConstraintFrames
+  default_planner_request_adapters/FixWorkspaceBounds
+  default_planner_request_adapters/FixStartStateBounds
+  default_planner_request_adapters/FixStartStateCollision
+  default_planner_request_adapters/FixStartStatePathConstraints
+
+# Optimized OMPL parameters for RM75
+ompl:
+  # Custom workspace bounds (cube dimensions)
+  workspace_bounds:
+    x_min: -0.2    # 20cm left of robot base
+    x_max: 0.8     # 80cm right of robot base
+    y_min: -0.4    # 40cm behind robot base
+    y_max: 0.4     # 40cm in front of robot base
+    z_min: -0.2    # -20cm below ground level
+    z_max: 0.8     # 80cm above ground
+  
+  # Time optimal parameterization
+  path_tolerance: 0.05      # 5cm path tolerance
+  resample_dt: 0.05         # 50ms resampling
+  min_angle_change: 0.01    # 0.01 rad minimum angle change
+  
+  # Start state handling
+  start_state_max_bounds_error: 0.05  # 5cm max bounds error
+  start_state_max_dt: 0.3              # 300ms max time step
+  
+  # Collision handling
+  
+
+# Planner configurations
+planner_configs:
+  RRTConnect:
+    type: geometric::RRTConnect
+    range: 0.0
+    max_states: 0
+    
+  RRTstar:
+    type: geometric::RRTstar
+    range: 0.0
+    goal_bias: 0.05
+    delay_collision_checking: 1
+    use_k_nearest: false
+    k_rrg: 0
+    rewire_factor: 1.1
+    max_states: 0
+    
+  PRMstar:
+    type: geometric::PRMstar
+    max_nearest_neighbors: 10
+    connection_attempts: 100
+    max_states: 0
+    
+  RRT:
+    type: geometric::RRT
+    range: 0.0
+    goal_bias: 0.05
+    max_states: 0
+    
+  PRM:
+    type: geometric::PRM
+    max_nearest_neighbors: 10
+    connection_attempts: 100
+    max_states: 0
+    
+  EST:
+    type: geometric::EST
+    range: 0.0
+    goal_bias: 0.05
+    max_states: 0
+    
+  KPIECE1:
+    type: geometric::KPIECE1
+    range: 0.0
+    goal_bias: 0.05
+    max_states: 0
+    min_valid_path_fraction: 0.5
+
+# Planning group configuration
+rm_group:
+  default_planner_config: RRTConnect
+  planner_configs:
+    - RRTConnect    # Fast, reliable
+    - RRTstar      # Good path quality
+    - PRMstar      # Complex environments
+    - RRT          # Simple fallback
+    - PRM          # Precise fallback
+    - EST          # Constrained spaces
+    - KPIECE1      # Kinodynamic constraints
+
+# Planning pipeline configuration
+planning_pipelines:
+  ompl:
+    planner_configs:
+      rm_group:
+        - RRTConnect
+        - RRTstar
+        - PRMstar
+        - RRT
+        - PRM
+        - EST
+        - KPIECE1
